@@ -31,9 +31,13 @@ gitignored so they don't end up in this repo.
 - `pypdf`, only to read the rubric PDF: `pip install pypdf`
 - Google Chrome, Chromium or Microsoft Edge, used in headless mode to print the PDFs
 
-## Quick start
+## Step by step with Claude Code
 
-1. Clone the repo and install `pypdf`:
+### 1. Set up (once)
+
+1. Install Claude Code by following the
+   [setup guide](https://docs.claude.com/en/docs/claude-code/setup), and sign in.
+2. Clone this repo and install `pypdf`:
 
    ```bash
    git clone https://github.com/JoaoHenz/rubrics_simulator_public.git
@@ -41,22 +45,91 @@ gitignored so they don't end up in this repo.
    pip install pypdf
    ```
 
-2. Put your rubric PDF somewhere in the repo, for example the repo root. The rubric isn't
-   included in this repo because it's an internal document.
+3. Create a `rubrics/` folder and copy your rubric PDF into it. The rubric isn't included here
+   because it's an internal document, and `rubrics/` is gitignored so it never gets committed.
 
-3. Start Claude Code in the repo and run:
-
+   ```bash
+   mkdir -p rubrics
+   cp ~/Downloads/"Software Engineer Rubric.pdf" rubrics/
    ```
-   /create-html-assessment
-   ```
 
-   Claude parses the rubric (the first time only), checks the result against the PDF, asks for
-   your current level, then builds and serves the form at `http://127.0.0.1:8765/form.html`.
+### 2. Start Claude Code in the repo
 
-4. Fill in the form and click **Export .md**.
+From the repo folder, run:
 
-5. Run `/export-assessment` for a PDF of your answers, `/review-promotion-case` for a scored
-   review, or both.
+```bash
+claude
+```
+
+Claude Code must be started **inside this folder**, since that's how it finds the skills in
+`.claude/skills/`. Type `/` in the prompt and you should see `create-html-assessment`,
+`export-assessment` and `review-promotion-case` in the list. (The Claude Code extension for
+VS Code or JetBrains works too, as long as this folder is the open workspace.)
+
+### 3. Build your form
+
+Type:
+
+```
+/create-html-assessment
+```
+
+Then answer Claude's questions:
+
+- **Which rubric:** if there's more than one PDF, tell it which one, for example
+  `use "Software Engineer Rubric.pdf"`.
+- **Your current level:** Claude lists the levels from the rubric. Reply with yours, for example
+  `Senior Software Engineer`.
+
+You can also say it all at once:
+
+```
+/create-html-assessment I'm a Senior Software Engineer, the rubric is "Software Engineer Rubric.pdf"
+```
+
+Claude will ask permission to run a few Python scripts. Approve them: they read the rubric
+(the first time only), build the form and start a small local server. Your browser then opens
+`http://127.0.0.1:8765/form.html`.
+
+### 4. Fill it in and export
+
+Fill in the form (see [Filling in the form](#filling-in-the-form)) and click **Export .md**.
+Then tell Claude in the same session:
+
+```
+I exported it
+```
+
+Claude reads your export and gives you a short tally per section.
+
+### 5. Get your PDFs
+
+For a PDF of exactly what you entered, with no scoring, to share with your manager:
+
+```
+/export-assessment
+```
+
+For Claude's scored review of how ready you are, with next steps:
+
+```
+/review-promotion-case
+```
+
+Both write to your assessment folder (see [Where things go](#where-things-go)), and Claude tells
+you the path when it's done.
+
+### Coming back later
+
+Your progress is saved, so you can stop at any point. To continue, start `claude` in the repo
+again and say:
+
+```
+Serve my assessment in assessments/<your folder> again
+```
+
+If you change your answers, export again from the form, then rerun `/export-assessment` or
+`/review-promotion-case` to refresh the PDFs.
 
 ## Filling in the form
 
@@ -69,8 +142,7 @@ gitignored so they don't end up in this repo.
 - Press Enter or click elsewhere to save an example. Shift+Enter adds a new line, and ✎ edits a
   saved one.
 - Progress is saved as you go (to `state.json` in the assessment folder), so you can close the
-  tab and come back later. To reopen the form, ask Claude to serve your assessment again, or run
-  the server yourself (see below).
+  tab and come back later (see [Coming back later](#coming-back-later)).
 
 ### Writing examples that count
 
@@ -87,7 +159,7 @@ with scope or a number:
 
 ```
 .claude/skills/            the three skills (shared, committed)
-rubrics/                   parsed rubrics as JSON (gitignored)
+rubrics/                   your rubric PDF and its parsed JSON (gitignored)
 assessments/<date>-<from>-to-<to>/
     form.html              the form for this level transition
     state.json             your saved progress
@@ -99,27 +171,6 @@ assessments/<date>-<from>-to-<to>/
 
 `rubrics/` and `assessments/` are in `.gitignore`. Keep it that way in this shared repo. If you
 want to version your own assessments, do that in a private fork or a separate private repo.
-
-## Running the scripts without Claude
-
-The skills wrap plain Python scripts, which you can run yourself:
-
-```bash
-SKILLS=.claude/skills
-
-# Parse a rubric PDF into JSON (check the output against the PDF)
-python3 $SKILLS/create-html-assessment/scripts/parse_rubric.py "My Rubric.pdf" rubrics/my-rubric.json
-
-# Build the form for a level transition, then serve it
-python3 $SKILLS/create-html-assessment/scripts/build_form.py rubrics/my-rubric.json "Senior Software Engineer" assessments/2026-10-30-senior-to-staff
-python3 $SKILLS/create-html-assessment/scripts/serve.py assessments/2026-10-30-senior-to-staff
-
-# Export your answers as a PDF
-python3 $SKILLS/export-assessment/scripts/build_pdf.py assessments/2026-10-30-senior-to-staff/self-assessment.md
-```
-
-`/review-promotion-case` is the one step that needs Claude, because the scoring is a judgement
-call. Its script only renders the `report.json` that Claude writes.
 
 ## Rubric support
 

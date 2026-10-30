@@ -19,7 +19,8 @@ assessments are personal, so neither should end up in this shared repo. Don't co
 Parsed rubrics are cached in `rubrics/<slug>.json` (for example
 `rubrics/software-engineer-2026-03.json`). If one exists for the rubric the user means, use it.
 
-Otherwise parse the PDF:
+Otherwise parse the PDF. Users put rubric PDFs in `rubrics/` (gitignored); if there are several,
+ask which one:
 
 ```bash
 python3 -I .claude/skills/create-html-assessment/scripts/parse_rubric.py "<rubric.pdf>" rubrics/<slug>.json
