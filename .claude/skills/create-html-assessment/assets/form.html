@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rubric Self-Assessment</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #ffffff; --text: #1d2330; --muted: #5f6b7a; --border: #dde2ea;
+    --accent: #2f6fde; --accent-soft: #e7effd; --next: #7a4cd9; --next-soft: #f1ebfd;
+    --ok: #1f8a4c; --danger: #c43c3c;
+    --sidebar: 260px; --gap: 28px; --header-h: 0px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12151b; --card: #1b2029; --text: #e6e9ef; --muted: #98a2b3; --border: #2c3340;
+      --accent: #6d9cf0; --accent-soft: #1f2d47; --next: #a988f0; --next-soft: #2b2342;
+      --ok: #4cc283; --danger: #ef7171;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  .frame { max-width: 1680px; margin: 0 auto; padding: 0 32px;
+    display: grid; grid-template-columns: var(--sidebar) minmax(0, 1fr) minmax(0, 1fr); column-gap: var(--gap); }
+
+  header { position: sticky; top: 0; z-index: 5; background: var(--card); border-bottom: 1px solid var(--border);
+    box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+  header .frame { padding-top: 12px; padding-bottom: 12px; align-items: stretch; }
+  .head-main { display: flex; flex-direction: column; gap: 8px; justify-content: space-between; }
+  .head-main h1 { font-size: 16px; margin: 0; line-height: 1.3; }
+  .head-main h1 small { display: block; font-weight: 400; color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .stats { font-size: 13px; color: var(--muted); }
+  .stats b { color: var(--text); }
+  .level-card { border-radius: 10px; padding: 10px 14px; font-size: 12.5px; color: var(--muted); cursor: pointer; }
+  .level-card.current { background: var(--accent-soft); }
+  .level-card.next { background: var(--next-soft); }
+  .level-card h3 { margin: 0 0 4px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+  .level-card.current h3 { color: var(--accent); }
+  .level-card.next h3 { color: var(--next); }
+  .level-card p { margin: 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .level-card.expanded p { -webkit-line-clamp: unset; }
+
+  button { font: inherit; cursor: pointer; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--card); color: var(--text); padding: 6px 12px; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  button.link { border: none; background: none; color: var(--accent); padding: 2px 0; font-size: 14px; }
+  button.remove { border: none; background: none; color: var(--muted); padding: 2px 6px; }
+  button.remove:hover { color: var(--danger); }
+  button:disabled { opacity: .5; cursor: default; }
+
+  nav.toc { position: sticky; top: calc(var(--header-h) + 24px); align-self: start; padding-top: 28px;
+    max-height: calc(100vh - var(--header-h) - 24px); overflow-y: auto; }
+  nav.toc h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 0 0 8px 10px; }
+  nav.toc a { display: block; text-decoration: none; color: var(--text); font-size: 14px;
+    padding: 7px 10px; border-radius: 8px; border-left: 3px solid transparent; margin-bottom: 2px; }
+  nav.toc a:hover { background: var(--card); }
+  nav.toc a.active { background: var(--card); border-left-color: var(--accent); font-weight: 600; }
+  nav.toc a small { display: block; font-size: 12px; color: var(--muted); font-weight: 400; }
+
+  main { grid-column: 2 / 4; padding: 28px 0 120px; }
+  section.topic { background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 20px 22px 12px; margin-bottom: 48px; scroll-margin-top: calc(var(--header-h) + 24px); }
+  section.topic > h2 { margin: 0; font-size: 20px; }
+  .values { color: var(--muted); font-size: 13px; font-style: italic; }
+  .columns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: calc(var(--gap) + 22px); margin-top: 8px; }
+  .group h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; margin: 12px 0 6px;
+    display: inline-block; padding: 2px 8px; border-radius: 6px; }
+  .group.current h3 { background: var(--accent-soft); color: var(--accent); }
+  .group.next h3 { background: var(--next-soft); color: var(--next); }
+  .group > .values { padding: 10px 0; }
+  .item { border-top: 1px solid var(--border); padding: 10px 0; }
+  .item label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+  .item input[type=checkbox] { width: 18px; height: 18px; margin-top: 2px; flex: none; accent-color: var(--ok); }
+  .item.checked .text { font-weight: 500; }
+  .examples { margin: 6px 0 0 28px; }
+  .example { display: flex; gap: 6px; align-items: flex-start; margin-bottom: 6px; }
+  .example .label { font-size: 12px; color: var(--muted); padding-top: 7px; min-width: 64px; }
+  .example-text { flex: 1; min-width: 0; padding: 6px 8px; font-size: 14px; white-space: pre-wrap; overflow-wrap: anywhere;
+    border-left: 2px solid var(--border); }
+  .example textarea { flex: 1; min-width: 0; min-height: 38px; resize: none; overflow: hidden; font: inherit; font-size: 14px; color: var(--text);
+    background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; }
+
+  @media (max-width: 900px) {
+    .frame { grid-template-columns: minmax(0, 1fr); }
+    header .frame { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); row-gap: 10px; }
+    .head-main { grid-column: 1 / 3; flex-direction: row; flex-wrap: wrap; align-items: center; }
+    nav.toc { position: static; max-height: none; padding-top: 16px; display: flex; flex-wrap: wrap; gap: 6px; }
+    nav.toc h2 { display: none; }
+    nav.toc a { border: 1px solid var(--border); border-radius: 999px; padding: 3px 10px; margin: 0; font-size: 13px; }
+    nav.toc a small { display: none; }
+    main { grid-column: 1; padding-top: 16px; }
+    .columns { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    .level-card p { -webkit-line-clamp: 2; }
+  }
+
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg);
+    padding: 10px 16px; border-radius: 8px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; max-width: 90vw; }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<header>
+  <div class="frame">
+    <div class="head-main">
+      <h1 id="title"></h1>
+      <div class="stats" id="stats"></div>
+      <div><button class="primary" id="export">Export .md</button></div>
+    </div>
+    <div class="level-card current" id="current-card" title="Click to expand"></div>
+    <div class="level-card next" id="next-card" title="Click to expand"></div>
+  </div>
+</header>
+<div class="frame">
+  <nav class="toc" id="toc"><h2>Sections</h2></nav>
+  <main id="topics"></main>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const DATA = /*__DATA__*/null;
+const MAX_EXAMPLES = 10;
+const KINDS = [["current", "Current", DATA.current], ["next", "Next", DATA.next]];
+const STORAGE_KEY = "rubric-assessment:" + DATA.id;
+const served = location.protocol.startsWith("http");
+
+let state = {};  // itemId -> { checked: bool, examples: [string], gap: [string] }
+
+function itemState(id) {
+  return state[id] || (state[id] = { checked: false, examples: [], gap: [] });
+}
+
+function el(tag, attrs = {}, ...children) {
+  const node = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "class") node.className = v;
+    else if (k.startsWith("on")) node.addEventListener(k.slice(2), v);
+    else node.setAttribute(k, v);
+  }
+  for (const c of children) node.append(c);
+  return node;
+}
+
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => t.classList.remove("show"), 3500);
+}
+
+let saveTimer;
+function persist() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  if (served) {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => fetch("state.json", { method: "PUT", body: JSON.stringify(state) }).catch(() => {}), 600);
+  }
+  renderStats();
+}
+
+function autoGrow(ta) {
+  ta.style.height = "auto";
+  ta.style.height = ta.scrollHeight + 2 + "px";
+}
+
+// Checked items collect up to 10 examples; unchecked items get one note explaining the gap.
+// Both are kept, so toggling the checkbox never loses text.
+const NOTE_MODES = {
+  checked: { key: "examples", max: MAX_EXAMPLES, label: i => `Example ${i + 1}`, noun: "example",
+             placeholder: "What you did, context, and the outcome…",
+             add: n => n ? "+ Add another example" : "+ Add example" },
+  unchecked: { key: "gap", max: 1, label: () => "Gap", noun: "gap explanation",
+               placeholder: "What's missing: no chance yet, partly done, not my strength…",
+               add: () => "+ Explain the gap" },
+};
+
+// Notes show as text; one at a time is edited in a textarea. Enter or blur saves, Shift+Enter adds a line.
+function renderNotes(container, id, editing = -1) {
+  container.replaceChildren();
+  const s = itemState(id);
+  const mode = NOTE_MODES[s.checked ? "checked" : "unchecked"];
+  // Drop notes left empty, except the one being edited.
+  const kept = [];
+  let editIndex = -1;
+  (s[mode.key] || []).forEach((t, i) => {
+    if (i === editing) editIndex = kept.length;
+    else if (!t.trim()) return;
+    kept.push(t);
+  });
+  const notes = s[mode.key] = kept;
+  editing = editIndex;
+  const rerender = next => renderNotes(container, id, next);
+  // Buttons keep focus off themselves so clicking one doesn't blur (and redraw) the note being edited first.
+  const button = (label, title, onclick) =>
+    el("button", { class: "remove", title, onmousedown: e => e.preventDefault(), onclick }, label);
+  notes.forEach((text, i) => {
+    const label = el("span", { class: "label" }, mode.label(i));
+    const del = button("✕", `Remove ${mode.noun}`, () => { notes.splice(i, 1); persist(); rerender(); });
+    if (i !== editing) {
+      container.append(el("div", { class: "example" }, label,
+        el("div", { class: "example-text", title: "Double-click to edit", ondblclick: () => rerender(i) }, text),
+        button("✎", `Edit ${mode.noun}`, () => rerender(i)), del));
+      return;
+    }
+    const ta = el("textarea", { rows: "1", placeholder: mode.placeholder });
+    ta.value = text;
+    const commit = () => {
+      if (!ta.isConnected) return;
+      notes[i] = ta.value.trim();
+      persist();
+      rerender();
+    };
+    ta.addEventListener("input", () => { notes[i] = ta.value; persist(); autoGrow(ta); });
+    ta.addEventListener("keydown", e => {
+      if ((e.key === "Enter" && !e.shiftKey && !e.isComposing) || e.key === "Escape") { e.preventDefault(); commit(); }
+    });
+    ta.addEventListener("blur", commit);
+    container.append(el("div", { class: "example" }, label, ta, del));
+    requestAnimationFrame(() => { autoGrow(ta); ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); });
+  });
+  if (notes.length < mode.max) {
+    container.append(el("button", { class: "link", onmousedown: e => e.preventDefault(), onclick: () => {
+      notes.push(""); rerender(notes.length - 1);
+    } }, mode.add(notes.length)));
+  }
+}
+
+function renderItem(id, text) {
+  const s = itemState(id);
+  const cb = el("input", { type: "checkbox" });
+  cb.checked = s.checked;
+  const row = el("div", { class: "item" + (s.checked ? " checked" : "") });
+  const notes = el("div", { class: "examples" });
+  cb.addEventListener("change", () => {
+    s.checked = cb.checked; row.classList.toggle("checked", cb.checked); persist(); renderNotes(notes, id);
+  });
+  row.append(el("label", {}, cb, el("span", { class: "text" }, text)), notes);
+  renderNotes(notes, id);
+  return row;
+}
+
+function render() {
+  document.getElementById("title").replaceChildren(
+    `${DATA.current.name} → ${DATA.next.name}`, el("small", {}, DATA.rubric));
+  document.title = `Self-Assessment: ${DATA.current.name}`;
+  for (const [kind, label, lvl] of KINDS) {
+    const card = document.getElementById(`${kind}-card`);
+    card.append(el("h3", {}, `${label}: ${lvl.name}`), el("p", {}, lvl.summary || ""));
+    card.addEventListener("click", () => card.classList.toggle("expanded"));
+  }
+  const toc = document.getElementById("toc");
+  const topics = document.getElementById("topics");
+  DATA.sections.forEach((sec, si) => {
+    toc.append(el("a", { href: `#s${si}`, "data-section": si }, sec.name, el("small", { id: `toc-count-${si}` })));
+    const node = el("section", { class: "topic", id: `s${si}` }, el("h2", {}, sec.name));
+    if (sec.values) node.append(el("div", { class: "values" }, sec.values));
+    const columns = el("div", { class: "columns" });
+    for (const [kind, label, lvl] of KINDS) {
+      const group = el("div", { class: `group ${kind}` }, el("h3", {}, `${label} — ${lvl.name}`));
+      const items = sec[kind];
+      if (!items.length) group.append(el("div", { class: "values" }, "No items at this level."));
+      items.forEach((text, ii) => group.append(renderItem(`${si}-${kind}-${ii}`, text)));
+      columns.append(group);
+    }
+    node.append(columns);
+    topics.append(node);
+  });
+  renderStats();
+  trackLayout();
+}
+
+// Keep sticky offsets in sync with the header height and highlight the section in view.
+function trackLayout() {
+  const header = document.querySelector("header");
+  const setHeight = () => document.documentElement.style.setProperty("--header-h", header.offsetHeight + "px");
+  new ResizeObserver(setHeight).observe(header);
+  setHeight();
+  const links = [...document.querySelectorAll("nav.toc a")];
+  const onScroll = () => {
+    const line = header.offsetHeight + 80;
+    let active = 0;
+    document.querySelectorAll("section.topic").forEach((s, i) => { if (s.getBoundingClientRect().top <= line) active = i; });
+    links.forEach((a, i) => a.classList.toggle("active", i === active));
+  };
+  addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+}
+
+function sectionTally(si, kind) {
+  const ids = DATA.sections[si][kind].map((_, ii) => `${si}-${kind}-${ii}`);
+  return { checked: ids.filter(id => state[id]?.checked).length, total: ids.length, ids };
+}
+
+function counts(kind) {
+  return DATA.sections.reduce((acc, _, si) => {
+    const t = sectionTally(si, kind);
+    return { checked: acc.checked + t.checked, total: acc.total + t.total };
+  }, { checked: 0, total: 0 });
+}
+
+function renderStats() {
+  const c = counts("current"), n = counts("next");
+  document.getElementById("stats").innerHTML =
+    `Current <b>${c.checked}/${c.total}</b> · Next <b>${n.checked}/${n.total}</b>`;
+  DATA.sections.forEach((_, si) => {
+    const tc = sectionTally(si, "current"), tn = sectionTally(si, "next");
+    const node = document.getElementById(`toc-count-${si}`);
+    if (node) node.textContent = `${tc.checked}/${tc.total} current · ${tn.checked}/${tn.total} next`;
+  });
+}
+
+function toMarkdown() {
+  const clean = notes => (notes || []).map(e => e.trim()).filter(Boolean);
+  const examplesOf = id => state[id]?.checked ? clean(state[id].examples) : [];
+  const gapOf = id => state[id]?.checked ? [] : clean(state[id]?.gap);
+  const oneLine = s => s.replace(/\s*\n\s*/g, " ");
+  const c = counts("current"), n = counts("next");
+  const lines = [
+    `# Self-assessment: ${DATA.current.name} → ${DATA.next.name}`, "",
+    `- **Rubric:** ${DATA.rubric}`,
+    `- **Current level:** ${DATA.current.name}`,
+    `- **Next level:** ${DATA.next.name}`,
+    `- **Exported:** ${new Date().toISOString().slice(0, 10)}`,
+    `- **Checked:** current ${c.checked}/${c.total}, next ${n.checked}/${n.total}`, "",
+    "## Summary", "",
+    `| Section | Current (${DATA.current.name}) | Next (${DATA.next.name}) | Examples |`,
+    "| --- | --- | --- | --- |",
+  ];
+  DATA.sections.forEach((sec, si) => {
+    const tc = sectionTally(si, "current"), tn = sectionTally(si, "next");
+    const examples = [...tc.ids, ...tn.ids].reduce((sum, id) => sum + examplesOf(id).length, 0);
+    lines.push(`| ${sec.name} | ${tc.checked}/${tc.total} | ${tn.checked}/${tn.total} | ${examples} |`);
+  });
+  DATA.sections.forEach((sec, si) => {
+    lines.push("", `## ${sec.name}`, "");
+    if (sec.values) lines.push(`_Values: ${sec.values}_`, "");
+    for (const [kind, label, lvl] of KINDS) {
+      lines.push(`### ${label} level: ${lvl.name}`, "");
+      if (!sec[kind].length) lines.push("_No items at this level._", "");
+      sec[kind].forEach((text, ii) => {
+        const id = `${si}-${kind}-${ii}`;
+        lines.push(`- [${state[id]?.checked ? "x" : " "}] ${text}`);
+        examplesOf(id).forEach((ex, i) => lines.push(`  - Example ${i + 1}: ${oneLine(ex)}`));
+        gapOf(id).forEach(gap => lines.push(`  - Gap: ${oneLine(gap)}`));
+      });
+      lines.push("");
+    }
+  });
+  return lines.join("\n").replace(/\n{3,}/g, "\n\n").trimEnd() + "\n";
+}
+
+async function exportMarkdown() {
+  const md = toMarkdown();
+  if (served) {
+    try {
+      const res = await fetch("self-assessment.md", { method: "PUT", body: md });
+      if (res.ok) { toast(`Saved ${await res.text()}`); return; }
+    } catch (e) {}
+  }
+  const a = el("a", { href: URL.createObjectURL(new Blob([md], { type: "text/markdown" })), download: "self-assessment.md" });
+  a.click();
+  toast("Downloaded self-assessment.md. Move it into the assessment folder.");
+}
+
+async function load() {
+  if (served) {
+    try {
+      const res = await fetch("state.json", { cache: "no-store" });
+      if (res.ok) state = await res.json();
+    } catch (e) {}
+  }
+  if (!Object.keys(state).length) {
+    try { state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch (e) { state = {}; }
+  }
+  render();
+}
+
+document.getElementById("export").addEventListener("click", exportMarkdown);
+load();
+</script>
+</body>
+</html>

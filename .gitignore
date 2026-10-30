@@ -1,0 +1,6 @@
+# Personal and company-internal files stay local
+rubrics/
+assessments/
+
+.DS_Store
+__pycache__/

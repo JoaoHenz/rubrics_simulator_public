@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{TITLE}}</title>
+<style>
+  @page { size: A4; margin: 16mm 15mm; }
+  :root { --text: #1d2330; --muted: #5f6b7a; --border: #dde2ea; --soft: #f4f6f9; --accent: #2f6fde;
+          --s1: #c43c3c; --s2: #e07b29; --s3: #d4a91c; --s4: #5aa35a; --s5: #1f8a4c; }
+  * { box-sizing: border-box; }
+  body { margin: 0; color: var(--text); background: #fff; font: 10.5pt/1.5 -apple-system, "Segoe UI", Roboto, sans-serif;
+         -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  h1 { font-size: 20pt; margin: 0 0 2pt; }
+  h2 { font-size: 14pt; margin: 22pt 0 8pt; padding-bottom: 4pt; border-bottom: 2px solid var(--text); }
+  h3 { font-size: 11.5pt; margin: 0; }
+  h4 { font-size: 9pt; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 8pt 0 2pt; }
+  p { margin: 4pt 0; }
+  ul { margin: 2pt 0; padding-left: 16pt; }
+  li { margin: 1pt 0; }
+  .meta { color: var(--muted); font-size: 9.5pt; }
+  .hero { display: flex; gap: 16pt; align-items: center; margin-top: 14pt; padding: 12pt 14pt; background: var(--soft); border-radius: 8pt; }
+  .hero .big { font-size: 30pt; font-weight: 700; line-height: 1; }
+  .hero .big small { font-size: 12pt; color: var(--muted); font-weight: 400; }
+  .hero .verdict { font-weight: 600; font-size: 12pt; }
+  table { width: 100%; border-collapse: collapse; font-size: 10pt; }
+  th { text-align: left; font-size: 8.5pt; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); padding: 4pt; border-bottom: 1px solid var(--border); }
+  td { padding: 5pt 4pt; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  td.num { white-space: nowrap; text-align: right; width: 1%; padding-left: 10pt; }
+  td.bar { width: 40%; }
+  td.bar span { display: block; height: 9pt; border-radius: 3pt; }
+  .s1 { --c: var(--s1); } .s2 { --c: var(--s2); } .s3 { --c: var(--s3); } .s4 { --c: var(--s4); } .s5 { --c: var(--s5); }
+  td.bar span { background: var(--c); }
+  .score { display: inline-flex; align-items: center; gap: 6pt; font-size: 9.5pt; color: var(--c); white-space: nowrap; }
+  .score b { color: var(--text); }
+  .dots { display: inline-flex; gap: 2pt; }
+  .dots i { width: 7pt; height: 7pt; border-radius: 50%; background: var(--border); display: inline-block; }
+  .dots i.on { background: var(--c); }
+  section.skill { border: 1px solid var(--border); border-radius: 8pt; padding: 10pt 12pt; margin-bottom: 10pt; break-inside: avoid; }
+  section.skill header { display: flex; justify-content: space-between; align-items: center; gap: 10pt; margin-bottom: 4pt; }
+  ul.good li::marker { content: "✓  "; color: var(--s5); }
+  ul.gap li::marker { content: "→  "; color: var(--s2); }
+  ol.steps { padding-left: 18pt; }
+  ol.steps > li { margin-bottom: 10pt; break-inside: avoid; }
+  ol.steps > li::marker { font-weight: 700; }
+  .refs { font-size: 9pt; color: var(--muted); font-style: italic; }
+  .page-break { break-before: page; }
+</style>
+</head>
+<body>
+  <h1>{{TITLE}}</h1>
+  <div class="meta">{{META}}</div>
+
+  <div class="hero s{{OVERALL_CLASS}}">
+    <div class="big">{{OVERALL_SCORE}}<small>/5</small></div>
+    <div>
+      <div class="verdict">{{VERDICT}}</div>
+      {{OVERALL_BADGE}}
+    </div>
+  </div>
+
+  <h2>Summary</h2>
+  {{SUMMARY}}
+
+  <h2>Readiness by skill</h2>
+  <table>
+    <thead><tr><th>Skill</th><th>Readiness for {{NEXT}}</th><th>Score</th><th>Evidence</th></tr></thead>
+    <tbody>{{OVERVIEW_ROWS}}</tbody>
+  </table>
+
+  <h2 class="page-break">Skill details</h2>
+  {{SECTIONS}}
+
+  <h2 class="page-break">Next steps toward {{NEXT}}</h2>
+  <ol class="steps">{{NEXT_STEPS}}</ol>
+
+  <h2>How this was scored</h2>
+  <p class="meta">Each skill is scored 1–5 on readiness for {{NEXT}}, based on the self-assessment: which
+  {{CURRENT}} and {{NEXT}} rubric items were checked, and how concrete the examples behind them are.
+  1 Not yet · 2 Emerging · 3 Developing · 4 Nearly ready · 5 Ready.</p>
+  {{CAVEATS}}
+</body>
+</html>
